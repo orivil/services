@@ -10,4 +10,5 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible
 	github.com/orivil/service v0.0.0-20200330091432-de84e2e0ccb6
 	github.com/orivil/xcfg v0.0.0-20200331070014-5dca2baf41c2
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 )
