@@ -9,10 +9,13 @@ import (
 	"github.com/orivil/xcfg"
 )
 
-var Provider service.Provider = func(c *service.Container) (value interface{}, err error) {
-	return make(xcfg.Data), nil
-}
+var ConfigFile = "configs/config.toml"
 
-func Init(configs xcfg.Data, container *service.Container) {
-	container.SetCache(&Provider, configs)
+var Service service.Provider = func(c *service.Container) (value interface{}, err error) {
+	var env xcfg.Env
+	env, err = xcfg.DecodeFile(ConfigFile)
+	if err != nil {
+		return nil, err
+	}
+	return env, nil
 }
