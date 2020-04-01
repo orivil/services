@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// 数据库公共配置
 type Env struct {
 	MaxLifetime  int `toml:"max_lifetime"`
 	MaxOpenConns int `toml:"max_open_conns"`

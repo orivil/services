@@ -9,6 +9,15 @@ import (
 	"github.com/go-redis/redis"
 )
 
+/**
+# redis配置
+[redis]
+# 地址
+addr = "127.0.0.1:6379"
+# 密码
+password = ""
+*/
+
 type Env struct {
 	Addr     string `toml:"addr"`
 	Password string `toml:"password"`

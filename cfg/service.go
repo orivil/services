@@ -9,13 +9,24 @@ import (
 	"github.com/orivil/xcfg"
 )
 
-var ConfigFile = "configs/config.toml"
+var defFile = "configs/config.toml"
 
-var Service service.Provider = func(c *service.Container) (value interface{}, err error) {
+type Service struct {
+	file string
+}
+
+func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
 	var env xcfg.Env
-	env, err = xcfg.DecodeFile(ConfigFile)
+	env, err = xcfg.DecodeFile(s.file)
 	if err != nil {
 		return nil, err
 	}
 	return env, nil
+}
+
+func NewService(configFile string) *Service {
+	if configFile == "" {
+		configFile = defFile
+	}
+	return &Service{file: configFile}
 }

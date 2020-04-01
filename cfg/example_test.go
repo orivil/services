@@ -23,13 +23,14 @@ type Mysql struct {
 
 func ExampleProvider() {
 	// 可重新设置配置文件地址
-	cfg.ConfigFile = "configs/config.toml"
+	configFile := "configs/config.toml"
+	serv := service.Provider(cfg.NewService(configFile))
 
 	// 依赖容器
 	container := service.NewContainer(false)
 
 	// 从容器中获得配置数据，该容器中的配置只会初始化一次
-	env := container.MustGet(&cfg.Service).(xcfg.Env)
+	env := container.MustGet(&serv).(xcfg.Env)
 
 	// 解析配置数据
 	mysql := &Mysql{}

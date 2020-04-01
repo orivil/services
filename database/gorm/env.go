@@ -18,7 +18,17 @@ const (
 	SQLite3  DBDialect = "sqlite3"
 )
 
-// gorm 配置参数
+/**
+# gorm 配置
+[gorm]
+# 是否开启调试模式
+debug = true
+# 数据库类型(目前支持的数据库类型：mysql/sqlite3/postgres)
+dialect = "sqlite3"
+# 数据库表名前缀
+table_prefix = ""
+*/
+
 type Env struct {
 	Debug       bool   `toml:"debug"`
 	Dialect     string `toml:"dialect"`
