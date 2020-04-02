@@ -4,11 +4,19 @@
 
 package captcha
 
-import "time"
+import (
+	"github.com/orivil/service"
+	"time"
+)
 
 type Storage interface {
 	GetCaptcha(id string) (string, error)
 	SetCaptcha(id, captcha string, expires time.Duration) error
 	IsCaptchaOK(id, captcha string) (ok bool, err error)
 	DelCaptcha(id string) (err error)
+}
+
+type StorageService interface {
+	service.Provider
+	Get(ctn *service.Container) (Storage, error)
 }

@@ -11,25 +11,45 @@ import (
 )
 
 type Service struct {
-	configService  service.Provider
-	storageService service.Provider
+	configService  *cfg.Service
+	storageService StorageService
+	self           service.Provider
 }
 
 func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
-	envs := ctn.MustGet(&s.configService).(xcfg.Env)
+	var envs xcfg.Env
+	envs, err = s.configService.Get(ctn)
+	if err != nil {
+		return nil, err
+	}
 	env := &Env{}
 	err = envs.UnmarshalSub("captcha", env)
 	if err != nil {
 		panic(err)
 	}
-	storage := ctn.MustGet(&s.storageService).(Storage)
+	var storage Storage
+	storage, err = s.storageService.Get(ctn)
+	if err != nil {
+		return nil, err
+	}
 	dispatcher := NewDispatcher(storage, env)
 	return dispatcher, nil
 }
 
-func NewService(configService *cfg.Service, storageService service.Provider) *Service {
-	return &Service{
+func (s *Service) Get(ctn *service.Container) (*Dispatcher, error) {
+	d, err := ctn.Get(&s.self)
+	if err != nil {
+		return nil, err
+	} else {
+		return d.(*Dispatcher), nil
+	}
+}
+
+func NewService(configService *cfg.Service, storageService StorageService) *Service {
+	s := &Service{
 		configService:  configService,
 		storageService: storageService,
 	}
+	s.self = s
+	return s
 }

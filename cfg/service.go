@@ -9,24 +9,41 @@ import (
 	"github.com/orivil/xcfg"
 )
 
-var defFile = "configs/config.toml"
-
 type Service struct {
-	file string
+	storageService StorageService
+	self           service.Provider
 }
 
 func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
+	var store Storage
+	store, err = s.storageService.Get(ctn)
+	if err != nil {
+		return nil, err
+	}
+	var data []byte
+	data, err = store.GetTomlData()
+	if err != nil {
+		return nil, err
+	}
 	var env xcfg.Env
-	env, err = xcfg.DecodeFile(s.file)
+	env, err = xcfg.Decode(data)
 	if err != nil {
 		return nil, err
 	}
 	return env, nil
 }
 
-func NewService(configFile string) *Service {
-	if configFile == "" {
-		configFile = defFile
+func (s *Service) Get(ctn *service.Container) (envs xcfg.Env, err error) {
+	es, er := ctn.Get(&s.self)
+	if er != nil {
+		return nil, er
+	} else {
+		return es.(xcfg.Env), nil
 	}
-	return &Service{file: configFile}
+}
+
+func NewService(storageService StorageService) *Service {
+	s := &Service{storageService: storageService}
+	s.self = s
+	return s
 }

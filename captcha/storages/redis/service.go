@@ -7,18 +7,36 @@ package redis
 import (
 	"github.com/go-redis/redis"
 	"github.com/orivil/service"
+	"github.com/orivil/services/captcha"
 	redis2 "github.com/orivil/services/memory/redis"
 )
 
 type Service struct {
-	redisService service.Provider
+	redisService *redis2.Service
+	self         service.Provider
+}
+
+func (s *Service) Get(ctn *service.Container) (captcha.Storage, error) {
+	store, err := ctn.Get(&s.self)
+	if err != nil {
+		return nil, err
+	} else {
+		storeInt := store.(*Storage)
+		return captcha.Storage(storeInt), nil
+	}
 }
 
 func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
-	client := ctn.MustGet(&s.redisService).(*redis.Client)
+	var client *redis.Client
+	client, err = s.redisService.Get(ctn)
+	if err != nil {
+		return nil, err
+	}
 	return NewStorage(client), nil
 }
 
 func NewService(redisService *redis2.Service) *Service {
-	return &Service{redisService: redisService}
+	s := &Service{redisService: redisService}
+	s.self = s
+	return s
 }

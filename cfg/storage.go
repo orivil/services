@@ -2,16 +2,12 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found at https://mit-license.org.
 
-package auth
+package cfg
 
 import "github.com/orivil/service"
 
 type Storage interface {
-	// 获得账号已加密密码, 如果账号不存在则返回空密码
-	GetPassword(id int) (password string, err error)
-
-	// 保存账号密码
-	SavePassword(id int, password string) error
+	GetTomlData() ([]byte, error)
 }
 
 type StorageService interface {

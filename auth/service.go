@@ -4,14 +4,46 @@
 
 package auth
 
-import "github.com/orivil/service"
+import (
+	"github.com/orivil/service"
+	"github.com/orivil/services/session"
+)
 
-type StorageService func() (Storage, error)
-
-func (sp StorageService) Init() service.Provider {
-	return func(c *service.Container) (value interface{}, err error) {
-		return sp()
-	}
+type Service struct {
+	storageService StorageService
+	sessionService *session.JWTAuthService
+	self           service.Provider
 }
 
-func NewService(storageService StorageService) ser
+func NewService(sessionService *session.JWTAuthService, storageService StorageService) *Service {
+	s := &Service{
+		storageService: storageService,
+		sessionService: sessionService,
+		self:           nil,
+	}
+	s.self = s
+	return s
+}
+
+func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
+	var store Storage
+	store, err = s.storageService.Get(ctn)
+	if err != nil {
+		return nil, err
+	}
+	var jwtAuth *session.JWTAuth
+	jwtAuth, err = s.sessionService.Get(ctn)
+	if err != nil {
+		return nil, err
+	}
+	return NewDispatcher(store, jwtAuth), nil
+}
+
+func (s *Service) Get(ctn *service.Container) (*Dispatcher, error) {
+	dis, err := ctn.Get(&s.self)
+	if err != nil {
+		return nil, err
+	} else {
+		return dis.(*Dispatcher), nil
+	}
+}

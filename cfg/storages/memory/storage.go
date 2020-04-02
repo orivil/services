@@ -2,13 +2,10 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found at https://mit-license.org.
 
-package captcha
+package memory
 
-import (
-	"fmt"
-	"testing"
-)
+type Storage string
 
-func TestFront(t *testing.T) {
-	fmt.Println(font)
+func (s Storage) GetTomlData() ([]byte, error) {
+	return []byte(s), nil
 }

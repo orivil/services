@@ -7,6 +7,7 @@ package gorm
 import (
 	"database/sql"
 	"fmt"
+	"github.com/jinzhu/gorm"
 	"github.com/orivil/service"
 	"github.com/orivil/services/cfg"
 	"github.com/orivil/services/database/mysql"
@@ -16,10 +17,66 @@ import (
 )
 
 type Service struct {
-	confService     service.Provider
-	mysqlService    service.Provider
-	postgresService service.Provider
-	sqliteService   service.Provider
+	configService   *cfg.Service
+	mysqlService    *mysql.Service
+	postgresService *postgres.Service
+	sqliteService   *sqlite.Service
+	self            service.Provider
+}
+
+func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
+	var envs xcfg.Env
+	envs, err = s.configService.Get(ctn)
+	if err != nil {
+		return nil, err
+	}
+	env := &Env{}
+	err = envs.UnmarshalSub("gorm", env)
+	if err != nil {
+		return nil, err
+	} else {
+		var db *sql.DB
+		switch DBDialect(env.Dialect) {
+		case Mysql:
+			db, err = s.mysqlService.Get(ctn)
+		case Postgres:
+			db, err = s.postgresService.Get(ctn)
+		case SQLite3:
+			db, err = s.sqliteService.Get(ctn)
+		default:
+			return nil, fmt.Errorf("gorm: dialect [%s] is not supported", env.Dialect)
+		}
+		var gormDB, er = env.Init(db)
+		if er != nil {
+			return nil, er
+		} else {
+			return gormDB, nil
+		}
+	}
+}
+
+func (s *Service) Get(ctn *service.Container) (*gorm.DB, error) {
+	db, er := ctn.Get(&s.self)
+	if er != nil {
+		return nil, er
+	} else {
+		return db.(*gorm.DB), nil
+	}
+}
+
+// 新建 gorm 服务，参数 sqlService 只能是 *mysql.Service, *postgres.Service 或者 *sqlite.Service
+func NewService(configService *cfg.Service, sqlService ...interface{}) *Service {
+	s := &Service{
+		configService:   configService,
+		mysqlService:    nil,
+		postgresService: nil,
+		sqliteService:   nil,
+	}
+	for _, se := range sqlService {
+		s.addSqlService(se)
+	}
+	s.self = s
+	return s
 }
 
 func (s *Service) addSqlService(service interface{}) {
@@ -33,45 +90,4 @@ func (s *Service) addSqlService(service interface{}) {
 	default:
 		panic("sql service not allowed")
 	}
-}
-
-func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
-	envs := ctn.MustGet(&s.confService).(xcfg.Env)
-	gormEnv := &Env{}
-	err = envs.UnmarshalSub("gorm", gormEnv)
-	if err != nil {
-		return nil, err
-	} else {
-		var db *sql.DB
-		switch DBDialect(gormEnv.Dialect) {
-		case Mysql:
-			db = ctn.MustGet(&s.mysqlService).(*sql.DB)
-		case Postgres:
-			db = ctn.MustGet(&s.postgresService).(*sql.DB)
-		case SQLite3:
-			db = ctn.MustGet(&s.sqliteService).(*sql.DB)
-		default:
-			return nil, fmt.Errorf("gorm: dialect [%s] is not supported", gormEnv.Dialect)
-		}
-		var gormDB, er = gormEnv.Init(db)
-		if er != nil {
-			return nil, er
-		} else {
-			return gormDB, nil
-		}
-	}
-}
-
-// 新建 gorm 服务，参数 sqlService 只能是 *mysql.Service, *postgres.Service 或者 *sqlite.Service
-func NewService(configService *cfg.Service, sqlService ...interface{}) *Service {
-	s := &Service{
-		confService:     configService,
-		mysqlService:    nil,
-		postgresService: nil,
-		sqliteService:   nil,
-	}
-	for _, se := range sqlService {
-		s.addSqlService(se)
-	}
-	return s
 }

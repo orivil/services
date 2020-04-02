@@ -4,7 +4,10 @@
 
 package session
 
-import "time"
+import (
+	"github.com/orivil/service"
+	"time"
+)
 
 type Storage interface {
 
@@ -16,4 +19,9 @@ type Storage interface {
 
 	// 移除会话状态
 	DelSession(session string) error
+}
+
+type StorageService interface {
+	service.Provider
+	Get(ctn *service.Container) (Storage, error)
 }

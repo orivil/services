@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found at https://mit-license.org.
 
-package redis_storage
+package redis
 
 import (
 	"github.com/go-redis/redis"
@@ -12,16 +12,32 @@ import (
 )
 
 type Service struct {
-	redisService service.Provider
+	redisService *redis2.Service
+	self         service.Provider
+}
+
+func (s *Service) Get(ctn *service.Container) (session.Storage, error) {
+	store, err := ctn.Get(&s.self)
+	if err != nil {
+		return nil, err
+	} else {
+		return store.(session.Storage), nil
+	}
 }
 
 func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
-	client := ctn.MustGet(&s.redisService).(*redis.Client)
+	var client *redis.Client
+	client, err = s.redisService.Get(ctn)
+	if err != nil {
+		return nil, err
+	}
 	return session.Storage(NewStorage(client)), nil
 }
 
 func NewService(redisService *redis2.Service) *Service {
-	return &Service{
+	s := &Service{
 		redisService: redisService,
 	}
+	s.self = s
+	return s
 }

@@ -5,17 +5,23 @@
 package postgres
 
 import (
+	"database/sql"
 	"github.com/orivil/service"
 	"github.com/orivil/services/cfg"
 	"github.com/orivil/xcfg"
 )
 
 type Service struct {
-	conf service.Provider
+	configService *cfg.Service
+	self          service.Provider
 }
 
 func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
-	envs := ctn.MustGet(&s.conf).(xcfg.Env)
+	var envs xcfg.Env
+	envs, err = s.configService.Get(ctn)
+	if err != nil {
+		return nil, err
+	}
 	env := &Env{}
 	err = envs.UnmarshalSub("postgres", env)
 	if err != nil {
@@ -25,9 +31,23 @@ func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
 	if er != nil {
 		panic(er)
 	}
+	ctn.OnClose(func() error {
+		return db.Close()
+	})
 	return db, nil
 }
 
+func (s *Service) Get(ctn *service.Container) (db *sql.DB, err error) {
+	d, er := ctn.Get(&s.self)
+	if er != nil {
+		return nil, er
+	} else {
+		return d.(*sql.DB), nil
+	}
+}
+
 func NewService(configService *cfg.Service) *Service {
-	return &Service{conf: service.Provider(configService)}
+	s := &Service{configService: configService}
+	s.self = s
+	return s
 }

@@ -5,7 +5,7 @@
 package captcha
 
 import (
-	"github.com/dchest/captcha"
+	"github.com/orivil/captcha"
 	"io"
 	"math/rand"
 	"strings"
@@ -19,9 +19,9 @@ const IDLength = 16
 var idChars = []byte("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 // 验证码字符集
-var numberChars = []byte("123567890")                                   // 无 4
-var letterChars = []byte("ABCDEFGHJKLMNOPQRSTUVWXYZ")                   // 无 i
-var numberAndLetterChars = []byte("123567890ABCDEFGHJKLMNOPQRSTUVWXYZ") // 无 4, i
+var numberChars = []byte("123567890")                                 // 无 4, 0
+var letterChars = []byte("ABCDEFGHJKLMNPQRSTUVWXYZ")                  // 无 i, O
+var numberAndLetterChars = []byte("12356789ABCDEFGHJKLMNPQRSTUVWXYZ") // 无 4, 0, i, O
 
 // 从 src 中随机创建 bit 位的随机字符数组
 func randomBytes(src []byte, bit int) []byte {
@@ -76,6 +76,7 @@ func (s *Dispatcher) WriteImage(id string, w io.Writer) error {
 	return err
 }
 
+// 验证验证码，如果验证失败，则需要重新生成验证码
 func (s *Dispatcher) Verify(id, code string) (ok bool, err error) {
 	ok, err = s.store.IsCaptchaOK(id, code)
 	if err != nil {
