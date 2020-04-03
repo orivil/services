@@ -10,44 +10,46 @@ import (
 	"github.com/orivil/xcfg"
 )
 
-type JWTAuthService struct {
-	configService  *cfg.Service
-	storageService StorageService
-	self           service.Provider
+type Service struct {
+	configService   *cfg.Service
+	storageService  StorageService
+	configNamespace string
+	self            service.Provider
 }
 
-func (j *JWTAuthService) New(ctn *service.Container) (value interface{}, err error) {
+func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
 	var envs xcfg.Env
-	envs, err = j.configService.Get(ctn)
+	envs, err = s.configService.Get(ctn)
 	if err != nil {
 		return nil, err
 	}
-	env := JWTEnv{}
-	err = envs.UnmarshalSub("jwt_auth", &env)
+	env := Env{}
+	err = envs.UnmarshalSub(s.configNamespace, &env)
 	if err != nil {
 		return nil, err
 	}
 	var store Storage
-	store, err = j.storageService.Get(ctn)
+	store, err = s.storageService.Get(ctn)
 	if err != nil {
 		return nil, err
 	}
-	return NewJWTAuth(store, env), nil
+	return NewDispatcher(store, env), nil
 }
 
-func (j *JWTAuthService) Get(ctn *service.Container) (*JWTAuth, error) {
-	auth, err := ctn.Get(&j.self)
+func (s *Service) Get(ctn *service.Container) (*Dispatcher, error) {
+	auth, err := ctn.Get(&s.self)
 	if err != nil {
 		return nil, err
 	} else {
-		return auth.(*JWTAuth), nil
+		return auth.(*Dispatcher), nil
 	}
 }
 
-func NewJWTAuthService(configService *cfg.Service, storageService StorageService) *JWTAuthService {
-	s := &JWTAuthService{
-		configService:  configService,
-		storageService: storageService,
+func NewService(configNamespace string, configService *cfg.Service, storageService StorageService) *Service {
+	s := &Service{
+		configService:   configService,
+		configNamespace: configNamespace,
+		storageService:  storageService,
 	}
 	s.self = s
 	return s

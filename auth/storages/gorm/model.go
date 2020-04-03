@@ -2,10 +2,9 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found at https://mit-license.org.
 
-package memory
+package auth_gorm_storage
 
-type Storage string
-
-func (s Storage) GetTomlData() ([]byte, error) {
-	return []byte(s), nil
+type UserPassword struct {
+	UsID int `gorm:"PRIMARY_KEY"`
+	Pass string
 }

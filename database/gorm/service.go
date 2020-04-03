@@ -21,6 +21,7 @@ type Service struct {
 	mysqlService    *mysql.Service
 	postgresService *postgres.Service
 	sqliteService   *sqlite.Service
+	configNamespace string
 	self            service.Provider
 }
 
@@ -31,7 +32,7 @@ func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
 		return nil, err
 	}
 	env := &Env{}
-	err = envs.UnmarshalSub("gorm", env)
+	err = envs.UnmarshalSub(s.configNamespace, env)
 	if err != nil {
 		return nil, err
 	} else {
@@ -65,9 +66,10 @@ func (s *Service) Get(ctn *service.Container) (*gorm.DB, error) {
 }
 
 // 新建 gorm 服务，参数 sqlService 只能是 *mysql.Service, *postgres.Service 或者 *sqlite.Service
-func NewService(configService *cfg.Service, sqlService ...interface{}) *Service {
+func NewService(configNamespace string, configService *cfg.Service, sqlService ...interface{}) *Service {
 	s := &Service{
 		configService:   configService,
+		configNamespace: configNamespace,
 		mysqlService:    nil,
 		postgresService: nil,
 		sqliteService:   nil,

@@ -11,11 +11,11 @@ import (
 
 type Service struct {
 	storageService StorageService
-	sessionService *session.JWTAuthService
+	sessionService *session.Service
 	self           service.Provider
 }
 
-func NewService(sessionService *session.JWTAuthService, storageService StorageService) *Service {
+func NewService(sessionService *session.Service, storageService StorageService) *Service {
 	s := &Service{
 		storageService: storageService,
 		sessionService: sessionService,
@@ -31,12 +31,12 @@ func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
 	if err != nil {
 		return nil, err
 	}
-	var jwtAuth *session.JWTAuth
-	jwtAuth, err = s.sessionService.Get(ctn)
+	var dispatcher *session.Dispatcher
+	dispatcher, err = s.sessionService.Get(ctn)
 	if err != nil {
 		return nil, err
 	}
-	return NewDispatcher(store, jwtAuth), nil
+	return NewDispatcher(store, dispatcher), nil
 }
 
 func (s *Service) Get(ctn *service.Container) (*Dispatcher, error) {

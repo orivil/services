@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/orivil/service"
 	"github.com/orivil/services/cfg"
-	"github.com/orivil/services/cfg/storages/memory"
+	"github.com/orivil/services/cfg/storages/config_memory_storage"
 	"github.com/orivil/services/memory/redis"
 	"time"
 )
@@ -23,9 +23,11 @@ is_mock = true
 addr = ""
 # 密码
 password = ""
+# 数据库
+db = 1
 `
-	cfgService := cfg.NewService(memory.NewService(config))
-	redisService := redis.NewService(cfgService, 1)
+	cfgService := cfg.NewService(cfg.NewMemoryStorageService(config))
+	redisService := redis.NewService("redis", cfgService)
 	container := service.NewContainer()
 	client, err := redisService.Get(container)
 	if err != nil {

@@ -20,15 +20,18 @@ is_mock = false
 addr = "127.0.0.1:6379"
 # 密码
 password = ""
+# 数据库
+db = 1
 */
 
 type Env struct {
 	IsMock   bool   `toml:"is_mock"`
 	Addr     string `toml:"addr"`
+	DB       int    `toml:"db"`
 	Password string `toml:"password"`
 }
 
-func (e Env) Init(db int) (client *redis.Client, mockServer *miniredis.Miniredis, err error) {
+func (e Env) Init() (client *redis.Client, mockServer *miniredis.Miniredis, err error) {
 	var addr string
 	if e.IsMock {
 		mockServer, err = miniredis.Run()
@@ -43,7 +46,7 @@ func (e Env) Init(db int) (client *redis.Client, mockServer *miniredis.Miniredis
 	client = redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: e.Password,
-		DB:       db,
+		DB:       e.DB,
 	})
 	err = client.Ping().Err()
 	if err != nil {

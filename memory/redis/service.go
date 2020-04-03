@@ -13,10 +13,10 @@ import (
 )
 
 type Service struct {
-	configService *cfg.Service
-	db            int
-	self          service.Provider
-	mockServer    *miniredis.Miniredis
+	configService   *cfg.Service
+	self            service.Provider
+	configNamespace string
+	mockServer      *miniredis.Miniredis
 }
 
 func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
@@ -26,13 +26,17 @@ func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
 		return nil, err
 	}
 	env := &Env{}
-	err = envs.UnmarshalSub("redis", env)
+	err = envs.UnmarshalSub(s.configNamespace, env)
 	if err != nil {
 		panic(err)
 	}
-	client, mockServer, err1 := env.Init(s.db)
-	if err1 != nil {
-		return nil, err1
+	var (
+		client     *redis.Client
+		mockServer *miniredis.Miniredis
+	)
+	client, mockServer, err = env.Init()
+	if err != nil {
+		return nil, err
 	}
 	s.mockServer = mockServer
 	ctn.OnClose(func() error {
@@ -59,10 +63,10 @@ func (s *Service) GetMockServer() *miniredis.Miniredis {
 	return s.mockServer
 }
 
-func NewService(configService *cfg.Service, DB int) *Service {
+func NewService(configNamespace string, configService *cfg.Service) *Service {
 	s := &Service{
-		configService: configService,
-		db:            DB,
+		configService:   configService,
+		configNamespace: configNamespace,
 	}
 	s.self = s
 	return s

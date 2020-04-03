@@ -12,8 +12,9 @@ import (
 )
 
 type Service struct {
-	configService *cfg.Service
-	self          service.Provider
+	configService   *cfg.Service
+	self            service.Provider
+	configNamespace string
 }
 
 func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
@@ -23,7 +24,7 @@ func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
 		return nil, err
 	}
 	env := &Env{}
-	err = envs.UnmarshalSub("mysql", env)
+	err = envs.UnmarshalSub(s.configNamespace, env)
 	if err != nil {
 		panic(err)
 	}
@@ -46,8 +47,8 @@ func (s *Service) Get(ctn *service.Container) (db *sql.DB, err error) {
 	}
 }
 
-func NewService(configService *cfg.Service) *Service {
-	s := &Service{configService: configService}
+func NewService(configNamespace string, configService *cfg.Service) *Service {
+	s := &Service{configService: configService, configNamespace: configNamespace}
 	s.self = s
 	return s
 }

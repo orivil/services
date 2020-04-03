@@ -2,13 +2,12 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found at https://mit-license.org.
 
-package memory_test
+package cfg_test
 
 import (
 	"fmt"
 	"github.com/orivil/service"
 	"github.com/orivil/services/cfg"
-	"github.com/orivil/services/cfg/storages/memory"
 )
 
 // 内存型配置存储器主要用于测试时方做便零时配置
@@ -19,7 +18,7 @@ func ExampleNewService() {
 host = "127.0.0.1"
 port= "3306"
 `
-	configService := cfg.NewService(memory.NewService(configData))
+	configService := cfg.NewService(cfg.NewMemoryStorageService(configData))
 
 	container := service.NewContainer()
 

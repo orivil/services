@@ -11,9 +11,10 @@ import (
 )
 
 type Service struct {
-	configService  *cfg.Service
-	storageService StorageService
-	self           service.Provider
+	configService   *cfg.Service
+	configNamespace string
+	storageService  StorageService
+	self            service.Provider
 }
 
 func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
@@ -23,7 +24,7 @@ func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
 		return nil, err
 	}
 	env := &Env{}
-	err = envs.UnmarshalSub("captcha", env)
+	err = envs.UnmarshalSub(s.configNamespace, env)
 	if err != nil {
 		panic(err)
 	}
@@ -45,10 +46,11 @@ func (s *Service) Get(ctn *service.Container) (*Dispatcher, error) {
 	}
 }
 
-func NewService(configService *cfg.Service, storageService StorageService) *Service {
+func NewService(configNamespace string, configService *cfg.Service, storageService StorageService) *Service {
 	s := &Service{
-		configService:  configService,
-		storageService: storageService,
+		configService:   configService,
+		configNamespace: configNamespace,
+		storageService:  storageService,
 	}
 	s.self = s
 	return s

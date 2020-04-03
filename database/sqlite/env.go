@@ -10,7 +10,12 @@ import (
 	"github.com/orivil/services/database"
 )
 
-// sqlite3 配置参数
+/**
+# sqlite数据库配置
+[sqlite3]
+# 数据库路径
+path = "data/SQLite.db"
+*/
 type Env struct {
 	Path string `toml:"path"`
 	database.Env

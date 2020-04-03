@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found at https://mit-license.org.
 
-package xgorm
+package auth_gorm_storage
 
 import (
 	"github.com/orivil/service"
@@ -30,4 +30,13 @@ func (s *Service) Get(ctn *service.Container) (auth.Storage, error) {
 	} else {
 		return store.(auth.Storage), nil
 	}
+}
+
+func NewService(gormService *gorm.Service) *Service {
+	s := &Service{
+		gormService: gormService,
+		self:        nil,
+	}
+	s.self = s
+	return s
 }

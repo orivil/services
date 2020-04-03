@@ -6,31 +6,46 @@ package auth
 
 import (
 	"errors"
+	"github.com/orivil/services/captcha"
 	"github.com/orivil/services/session"
 	"golang.org/x/crypto/bcrypt"
-	"strconv"
+	"io"
 )
 
 var (
 	ErrUserNotRegistered     = errors.New("user not registered")
 	ErrUserAlreadyRegistered = errors.New("user already registered")
 	ErrPasswordIncorrect     = errors.New("password incorrect")
-	ErrInvalidToken          = session.ErrInvalidToken
+	ErrInvalidToken          = errors.New("invalid token")
 )
 
 type Dispatcher struct {
-	store Storage
-	jwt   *session.JWTAuth
+	store             Storage
+	sessionDispatcher *session.Dispatcher
+	captchaDispatcher *captcha.Dispatcher
 }
 
-func NewDispatcher(store Storage, jwt *session.JWTAuth) *Dispatcher {
+func NewDispatcher(store Storage, sessionDispatcher *session.Dispatcher, captchaDispatcher *captcha.Dispatcher) *Dispatcher {
 	return &Dispatcher{
-		store: store,
-		jwt:   jwt,
+		store:             store,
+		sessionDispatcher: sessionDispatcher,
+		captchaDispatcher: captchaDispatcher,
 	}
 }
 
-// 更新账号密码
+func (h *Dispatcher) GetCaptchaID() (id string, err error) {
+	return h.captchaDispatcher.GenID()
+}
+
+func (h *Dispatcher) ServeImage(id string, w io.Writer) error {
+	return h.captchaDispatcher.WriteImage(id, w)
+}
+
+func (h *Dispatcher) VerifyCaptcha(id, code string) (ok bool, err error) {
+	return h.captchaDispatcher.Verify(id, code)
+}
+
+// 更新账号密码, 用户不存在则返回 ErrUserNotRegistered 错误
 func (h *Dispatcher) UpdatePassword(id int, password string) error {
 	exist, err := h.store.GetPassword(id)
 	if err != nil {
@@ -52,7 +67,7 @@ func (h *Dispatcher) generateAndSavePassword(id int, password string) error {
 }
 
 // 注册账号, 如果账号已存在则返回 ErrUserAlreadyRegistered 错误
-func (h *Dispatcher) Register(id int, password string) error {
+func (h *Dispatcher) CreatePassword(id int, password string) error {
 	exist, err := h.store.GetPassword(id)
 	if err != nil {
 		return err
@@ -63,37 +78,40 @@ func (h *Dispatcher) Register(id int, password string) error {
 	return h.generateAndSavePassword(id, password)
 }
 
-// 登录账号并设置登录状态. 如果用户未注册则返回 ErrUserNotRegistered 错误,
+// 检测密码是否正确. 如果用户未注册则返回 ErrUserNotRegistered 错误,
 // 密码错误则返回 ErrPasswordIncorrect
-func (h *Dispatcher) Login(id int, password string) (token string, err error) {
-	hashedPassword, er := h.store.GetPassword(id)
-	if er != nil {
-		return "", er
+func (h *Dispatcher) VerifyPassword(id int, password string) (err error) {
+	var hashedPassword string
+	hashedPassword, err = h.store.GetPassword(id)
+	if err != nil {
+		return err
 	}
 	if hashedPassword == "" {
-		return "", ErrUserNotRegistered
+		return ErrUserNotRegistered
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil {
-		return "", ErrPasswordIncorrect
+		return ErrPasswordIncorrect
+	} else {
+		return nil
 	}
-	return h.jwt.MarshalToken(strconv.Itoa(id))
 }
 
-// 解除登录状态
-func (h *Dispatcher) Logout(token string) error {
-	return h.jwt.DelToken(token)
+// 生成 token 并设置会话, 在操作之前应该验证用户密码及验证码等
+func (h *Dispatcher) MarshalToken(user interface{}) (token string, err error) {
+	return h.sessionDispatcher.MarshalToken(user)
 }
 
-// 解析 token 获得用户 ID, 如果获得了新的 newToken, 则表示原 token 快要过期, 需要替换 token
-// 如果没有获得 newToken, 则原 token 可以继续使用. 如果 token 验证错误, 则返回 ErrInvalidToken
-// 此时需要重新登录获得 token
-func (h *Dispatcher) GetUserID(token string) (id int, newToken string, err error) {
-	var idStr string
-	idStr, newToken, err = h.jwt.UnmarshalID(token)
-	if err == session.ErrInvalidToken {
+// 删除 token 并移除会话
+func (h *Dispatcher) DelToken(token string) error {
+	return h.sessionDispatcher.DelToken(token)
+}
+
+// 解析 token 并获得 token 过期时间, 如果返回值 err 为 ErrInvalidToken, 则需要重新验证并生成 token
+func (h *Dispatcher) UnmarshalToken(token string) (user interface{}, expiredAt int64, err error) {
+	user, expiredAt, err = h.sessionDispatcher.UnmarshalToken(token)
+	if session.IsInvalidTokenErr(err) {
 		err = ErrInvalidToken
 	}
-	id, err = strconv.Atoi(idStr)
 	return
 }

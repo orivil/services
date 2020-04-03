@@ -4,7 +4,9 @@
 
 package cfg
 
-import "github.com/orivil/service"
+import (
+	"github.com/orivil/service"
+)
 
 type Storage interface {
 	GetTomlData() ([]byte, error)
