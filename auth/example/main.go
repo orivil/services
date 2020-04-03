@@ -11,7 +11,6 @@ import (
 	"github.com/orivil/services/auth"
 	"github.com/orivil/services/auth/storages/gorm"
 	"github.com/orivil/services/cfg"
-	"github.com/orivil/services/cfg/storages/config_memory_storage"
 	"github.com/orivil/services/database/gorm"
 	"github.com/orivil/services/database/sqlite"
 	"github.com/orivil/services/memory/redis"

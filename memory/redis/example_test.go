@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/orivil/service"
 	"github.com/orivil/services/cfg"
-	"github.com/orivil/services/cfg/storages/config_memory_storage"
 	"github.com/orivil/services/memory/redis"
 	"time"
 )

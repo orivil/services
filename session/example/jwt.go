@@ -12,7 +12,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/orivil/service"
 	"github.com/orivil/services/cfg"
-	"github.com/orivil/services/cfg/storages/config_memory_storage"
 	"github.com/orivil/services/memory/redis"
 	"github.com/orivil/services/session"
 	"github.com/orivil/services/session/storages/redis"
