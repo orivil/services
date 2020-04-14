@@ -6,52 +6,26 @@ package email
 
 import (
 	"bytes"
-	"html/template"
 	"mime/quotedprintable"
 	"net/smtp"
-	"sync"
 )
 
 type Sender struct {
 	FromEmail string
 	Auth      smtp.Auth
-	tpl       *template.Template
 	Addr      string
 }
 
-func NewSMTPSender(env *Env, tplStorage TemplateStorage) (*Sender, error) {
-	data, err := tplStorage.Read()
-	if err != nil {
-		return nil, err
-	}
-	var tpl *template.Template
-	tpl, err = template.New("email").Parse(string(data))
-	if err != nil {
-		return nil, err
-	}
+func NewSMTPSender(env *Env) *Sender {
 	return &Sender{
 		FromEmail: env.From,
-		tpl:       tpl,
 		Auth:      smtp.PlainAuth("", env.Username, env.Password, env.Host),
 		Addr:      env.Host + env.Port,
-	}, nil
-}
-
-var bodyPool = sync.Pool{
-	New: func() interface{} {
-		return new(bytes.Buffer)
-	},
-}
-
-func (et *Sender) Send(toEmails []string, subject, contentType string, data interface{}) error {
-	buf := bodyPool.Get().(*bytes.Buffer)
-	buf.Reset()
-	defer bodyPool.Put(buf)
-	err := et.tpl.Execute(buf, data)
-	if err != nil {
-		return err
 	}
-	body := InitEmailBody(et.FromEmail, subject, contentType, buf.Bytes())
+}
+
+func (et *Sender) Send(toEmails []string, subject, contentType string, body []byte) error {
+	body = InitEmailBody(et.FromEmail, subject, contentType, body)
 	return smtp.SendMail(et.Addr, et.Auth, et.FromEmail, toEmails, body)
 }
 

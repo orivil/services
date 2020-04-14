@@ -10,26 +10,22 @@ import (
 	"github.com/orivil/service"
 	"github.com/orivil/services/auth"
 	"github.com/orivil/services/auth/storages/gorm"
+	email2 "github.com/orivil/services/captcha/email"
+	"github.com/orivil/services/captcha/image"
+	"github.com/orivil/services/captcha/storages/memory"
 	"github.com/orivil/services/cfg"
 	"github.com/orivil/services/database/gorm"
 	"github.com/orivil/services/database/sqlite"
-	"github.com/orivil/services/memory/redis"
+	"github.com/orivil/services/email"
+	"github.com/orivil/services/limiter"
+	rds "github.com/orivil/services/memory/redis"
 	"github.com/orivil/services/session"
 	"github.com/orivil/services/session/storages/redis"
+	"io"
+	"net/http"
+	"path"
+	"path/filepath"
 )
-
-
-var emailTemplate = `<!doctype html>
-<html lang="en">
-<head>
-   <meta charset="UTF-8">
-   <title>{{.title}}</title>
-</head>
-<body>
-<h1 style="text-align: center">{{.title}}</h1>
-<p><span style="font-weight: bold">{{.code}}</span> {{.message}}</p>
-</body>
-</html>`
 
 var config = `
 # sqlite数据库配置
@@ -72,28 +68,66 @@ refresh = 1800
 
 // 测试该项目需要安装 SQLite3, 或则更改为 Postgres/Mysql
 func main() {
-	cfgService := cfg.NewService(cfg.NewMemoryStorageService(config))
+	var (
+		cfgService            *cfg.Service
+		SQLiteService         *sqlite.Service
+		gormService           *gorm.Service
+		sessionStorageService session.StorageService
+		sessionService        *session.Service
+		imageCaptchaService   *image_captcha.Service
+		emailService          *email.Service
+		emailCaptchaService   *email2.Service
+		limiterService        *limiter.Service
+		authStorageService    auth.StorageService
+		authDispatcherService *auth.Service
+	)
+	cfgService = cfg.NewService(cfg.NewMemoryStorageService(config))
 
-	// gorm
-	SQLiteService := sqlite.NewService("sqlite3", cfgService)
-	gormService := gorm.NewService("gorm", cfgService, SQLiteService)
+	SQLiteService = sqlite.NewService("sqlite3", cfgService)
 
-	redisService := redis.NewService("redis", cfgService)
+	gormService = gorm.NewService("gorm", cfgService, SQLiteService)
 
-	authGormStorageService := auth_gorm_storage.NewService(gormService)
+	sessionStorageService = session_redis_storage.NewService(rds.NewService("session-redis", cfgService))
 
-	sessionRedisStorageService := session_redis_storage.NewService(redisService)
+	sessionService = session.NewService("sessions", cfgService, sessionStorageService)
 
-	sessionService := session.NewService("sessions", cfgService, sessionRedisStorageService)
+	imageCaptchaService = image_captcha.NewService("image-captcha", cfgService, captcha_memory_storage.NewService())
 
-	authDispatcherService := auth.NewService(sessionService, authGormStorageService)
+	emailService = email.NewService("smtp-email", cfgService)
+
+	emailCaptchaService = email2.NewService("email-captcha", cfgService, emailService, captcha_memory_storage.NewService(), email2.TemplateMemoryStorage(emailTemplate))
+
+	limiterService = limiter.NewService("email-limiter", cfgService, limiter.NewMemoryStorageService())
+
+	authStorageService = auth_gorm_storage.NewService(gormService)
+
+	authDispatcherService = auth.NewService(authStorageService, sessionService, imageCaptchaService, emailCaptchaService, limiterService)
 
 	container := service.NewContainer()
 
-	authDispatcher, err := authDispatcherService.Get(container)
+	dispatcher, err := authDispatcherService.Get(container)
 	if err != nil {
 		panic(err)
 	}
-
-	authDispatcher.
+	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+		_, file := path.Split(request.URL.Path)
+		if file == "" {
+			file = "index"
+		}
+		http.ServeFile(writer, request, filepath.Join("pages", file+".gohtml"))
+	})
 }
+
+var emailTemplate = `<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Email</title>
+</head>
+<body>
+<h1 style="text-align: center">Verify your Email</h1>
+<p><span style="font-weight: bold">{{.}}</span> is your captcha</p>
+</body>
+</html>`
+
+var indexPage = []byte(``)

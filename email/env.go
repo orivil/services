@@ -4,6 +4,25 @@
 
 package email
 
+/**
+# SMTP 邮箱配置
+[smtp-email]
+
+# 域名
+host = "smtp.gmail.com"
+
+# 端口
+port = ":587"
+
+# 用户名
+username = "xxx"
+
+# 密码
+password = "xxx"
+
+# 来源
+from = "orivil.com"
+*/
 type Env struct {
 	Host     string `toml:"host"`
 	Port     string `toml:"port"`

@@ -4,20 +4,14 @@
 
 package email
 
-import "io/ioutil"
+import "github.com/orivil/service"
 
-type TemplateStorage interface {
-	Read() ([]byte, error)
+type Storage interface {
+	GetEnv() (*Env, error)
+	SetEnv(env *Env) error
 }
 
-type FileStorage string
-
-func (s FileStorage) Read() ([]byte, error) {
-	return ioutil.ReadFile(string(s))
-}
-
-type MemoryStorage string
-
-func (s MemoryStorage) Read() ([]byte, error) {
-	return []byte(s), nil
+type StorageService interface {
+	service.Provider
+	Get(container *service.Container) (Storage, error)
 }

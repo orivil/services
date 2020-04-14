@@ -5,20 +5,36 @@
 package auth
 
 import (
+	limiter2 "github.com/orivil/limiter"
 	"github.com/orivil/service"
+	"github.com/orivil/services/captcha/email"
+	"github.com/orivil/services/captcha/image"
+	"github.com/orivil/services/limiter"
 	"github.com/orivil/services/session"
 )
 
 type Service struct {
 	storageService StorageService
 	sessionService *session.Service
+	imageService   *image_captcha.Service
+	emailService   *email_captcha.Service
+	limiterService *limiter.Service
 	self           service.Provider
 }
 
-func NewService(sessionService *session.Service, storageService StorageService) *Service {
+func NewService(
+	storageService StorageService,
+	sessionService *session.Service,
+	imageCaptchaService *image_captcha.Service,
+	emailCaptchaService *email_captcha.Service,
+	limiterService *limiter.Service,
+) *Service {
 	s := &Service{
 		storageService: storageService,
 		sessionService: sessionService,
+		imageService:   imageCaptchaService,
+		emailService:   emailCaptchaService,
+		limiterService: limiterService,
 		self:           nil,
 	}
 	s.self = s
@@ -26,17 +42,48 @@ func NewService(sessionService *session.Service, storageService StorageService) 
 }
 
 func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
-	var store Storage
-	store, err = s.storageService.Get(ctn)
+	var (
+		storage           Storage
+		sessionDispatcher *session.Dispatcher
+		imageDispatcher   *image_captcha.Dispatcher
+		emailDispatcher   *email_captcha.Dispatcher
+		tlimiter          *limiter2.TimesLimiter
+	)
+	storage, err = s.storageService.Get(ctn)
 	if err != nil {
 		return nil, err
 	}
-	var dispatcher *session.Dispatcher
-	dispatcher, err = s.sessionService.Get(ctn)
-	if err != nil {
-		return nil, err
+	if s.sessionService != nil {
+		sessionDispatcher, err = s.sessionService.Get(ctn)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return NewDispatcher(store, dispatcher), nil
+	if s.imageService != nil {
+		imageDispatcher, err = s.imageService.Get(ctn)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if s.emailService != nil {
+		emailDispatcher, err = s.emailService.Get(ctn)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if s.limiterService != nil {
+		tlimiter, err = s.limiterService.Get(ctn)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &Dispatcher{
+		Store:                  storage,
+		SessionDispatcher:      sessionDispatcher,
+		ImageCaptchaDispatcher: imageDispatcher,
+		EmailCaptchaDispatcher: emailDispatcher,
+		Limiter:                tlimiter,
+	}, nil
 }
 
 func (s *Service) Get(ctn *service.Container) (*Dispatcher, error) {

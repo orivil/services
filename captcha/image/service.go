@@ -2,10 +2,11 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found at https://mit-license.org.
 
-package captcha
+package image_captcha
 
 import (
 	"github.com/orivil/service"
+	"github.com/orivil/services/captcha"
 	"github.com/orivil/services/cfg"
 	"github.com/orivil/xcfg"
 )
@@ -13,7 +14,7 @@ import (
 type Service struct {
 	configService   *cfg.Service
 	configNamespace string
-	storageService  StorageService
+	storageService  captcha.StorageService
 	self            service.Provider
 }
 
@@ -26,9 +27,9 @@ func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
 	env := &Env{}
 	err = envs.UnmarshalSub(s.configNamespace, env)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	var storage Storage
+	var storage captcha.Storage
 	storage, err = s.storageService.Get(ctn)
 	if err != nil {
 		return nil, err
@@ -46,7 +47,7 @@ func (s *Service) Get(ctn *service.Container) (*Dispatcher, error) {
 	}
 }
 
-func NewService(configNamespace string, configService *cfg.Service, storageService StorageService) *Service {
+func NewService(configNamespace string, configService *cfg.Service, storageService captcha.StorageService) *Service {
 	s := &Service{
 		configService:   configService,
 		configNamespace: configNamespace,

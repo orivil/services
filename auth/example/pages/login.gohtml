@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Login</title>
+</head>
+<body>
+<form action="/login?cid={{.captchaID}}">
+    <label>
+        用户名：
+        <input type="text" value="" name="username">
+    </label>
+    <label>
+        密码：
+        <input type="password" value="" name="password">
+    </label>
+    <a href="javascript:void(0)" onclick="reloadCaptcha()">
+        <img id=image src="/captcha/{{.captchaID}}.png" alt="Captcha image">
+    </a>
+    <label>
+        验证码：
+        <input type="password" value="" name="password">
+    </label>
+    <input type=submit value=登录>
+</form>
+<a href="/reset">修改密码</a>
+</body>
+<script>
+    let captchaUrl = "/captcha/{{.captchaID}}.png"
+    function reloadCaptcha() {
+        document.getElementById('image').src = captchaUrl + "?t=" + (new Date()).getTime()
+    }
+</script>
+</html>

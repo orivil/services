@@ -10,10 +10,9 @@ import (
 )
 
 type Service struct {
-	cfgService      *cfg.Service
-	templateStorage TemplateStorage
-	cfgNamespace    string
-	self            service.Provider
+	cfgService   *cfg.Service
+	cfgNamespace string
+	self         service.Provider
 }
 
 func (s *Service) New(container *service.Container) (interface{}, error) {
@@ -26,7 +25,7 @@ func (s *Service) New(container *service.Container) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewSMTPSender(env, s.templateStorage)
+	return NewSMTPSender(env), nil
 }
 
 func (s *Service) Get(container *service.Container) (*Sender, error) {
@@ -38,12 +37,11 @@ func (s *Service) Get(container *service.Container) (*Sender, error) {
 	}
 }
 
-func NewService(configNamespace string, cfgService *cfg.Service, templateStorage TemplateStorage) *Service {
+func NewService(configNamespace string, cfgService *cfg.Service) *Service {
 	s := &Service{
-		cfgService:      cfgService,
-		templateStorage: templateStorage,
-		cfgNamespace:    configNamespace,
-		self:            nil,
+		cfgService:   cfgService,
+		cfgNamespace: configNamespace,
+		self:         nil,
 	}
 	s.self = s
 	return s

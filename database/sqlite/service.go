@@ -9,6 +9,8 @@ import (
 	"github.com/orivil/service"
 	"github.com/orivil/services/cfg"
 	"github.com/orivil/xcfg"
+	"os"
+	"path/filepath"
 )
 
 type Service struct {
@@ -27,6 +29,10 @@ func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
 	err = envs.UnmarshalSub(s.configNamespace, env)
 	if err != nil {
 		panic(err)
+	}
+	err = os.MkdirAll(filepath.Dir(env.Path), os.ModePerm)
+	if err != nil {
+		return nil, err
 	}
 	db, er := env.Connect()
 	if er != nil {

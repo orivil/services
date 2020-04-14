@@ -17,16 +17,6 @@ func NewStorage(client *redis.Client) *Storage {
 	return &Storage{client: client}
 }
 
-func (c *Storage) GetCaptcha(id string) (string, error) {
-	captcha, err := c.client.Get(id).Result()
-	if err != nil {
-		if err == redis.Nil {
-			err = nil
-		}
-	}
-	return captcha, err
-}
-
 func (c *Storage) SetCaptcha(id, captcha string, expires time.Duration) error {
 	return c.client.Set(id, captcha, expires).Err()
 }

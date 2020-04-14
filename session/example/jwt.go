@@ -2,19 +2,22 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found at https://mit-license.org.
 
-/// +build ignore
+// +build ignore
 
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/orivil/service"
 	"github.com/orivil/services/cfg"
-	"github.com/orivil/services/memory/redis"
+	rds "github.com/orivil/services/memory/redis"
 	"github.com/orivil/services/session"
-	"github.com/orivil/services/session/storages/redis"
+	session_redis_storage "github.com/orivil/services/session/storages/redis"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -44,7 +47,7 @@ var redisMockServer *miniredis.Miniredis
 
 func main() {
 	cfgService := cfg.NewService(cfg.NewMemoryStorageService(config))
-	redisService := redis.NewService("redis", cfgService)
+	redisService := rds.NewService("redis", cfgService)
 	storeService := session_redis_storage.NewService(redisService)
 	sessionService := session.NewService("sessions", cfgService, storeService)
 	container := service.NewContainer()
@@ -61,21 +64,60 @@ func main() {
 	fmt.Println("success")
 }
 
+type user struct {
+	ID   int
+	Name string
+}
+
+func (u user) Marshal() string {
+	return strconv.Itoa(u.ID) + ":" + u.Name
+}
+
+func UnmarshalUser(data string) (*user, error) {
+	idx := strings.Index(data, ":")
+	if idx == -1 ||
+		idx == 0 ||
+		idx == len(data)-1 ||
+		strings.Count(data, ":") != 1 {
+		return nil, errors.New("UnmarshalUser: data format incorrect")
+	} else {
+		u := &user{
+			ID:   0,
+			Name: "",
+		}
+		u.ID, _ = strconv.Atoi(data[:idx])
+		u.Name = data[idx+1:]
+		return u, nil
+	}
+}
+
+func MustUnmarshalUser(data string) *user {
+	u, err := UnmarshalUser(data)
+	if err != nil {
+		panic(err)
+	}
+	return u
+}
+
 func testUnmarshal(dispatcher *session.Dispatcher) {
 	var (
-		ID    = "unmarshal_id"
-		newID interface{}
+		usr = user{
+			ID:   1,
+			Name: "tony",
+		}.Marshal()
+		//gotUsr *user
+		got interface{}
 	)
-	token, err := dispatcher.MarshalToken(ID)
+	token, err := dispatcher.MarshalToken(usr)
 	if err != nil {
 		panic(err)
 	} else {
-		newID, _, err = dispatcher.UnmarshalToken(token)
+		got, _, err = dispatcher.UnmarshalToken(token)
 		if err != nil {
 			panic(err)
 		}
-		if newID.(string) != ID {
-			panic(fmt.Errorf("need: %s, got: %s", ID, newID))
+		if usr != got {
+			panic(fmt.Errorf("need: %v, got: %v", usr, got))
 		}
 	}
 }
@@ -111,10 +153,6 @@ func setForwardTime(d time.Duration, done func()) {
 	}
 	redisMockServer.FastForward(d)
 	done()
-	jwt.TimeFunc = func() time.Time {
-		return time.Now()
-	}
-	session.NowFunc = func() time.Time {
-		return time.Now()
-	}
+	jwt.TimeFunc = time.Now
+	session.NowFunc = time.Now
 }

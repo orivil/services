@@ -56,12 +56,8 @@ db = 1
 	ok, err = store.IsCaptchaOK(id, captcha)
 	panicErr(err)
 	fmt.Println(ok == false)
-	captcha, err = store.GetCaptcha(id)
-	panicErr(err)
-	fmt.Println(captcha == "")
 
 	// Output:
-	// true
 	// true
 	// true
 	// true

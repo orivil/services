@@ -10,9 +10,11 @@ require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/lib/pq v1.1.1
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible
-	github.com/orivil/captcha v0.0.0-20200402023620-a6916aa76b23
+	github.com/orivil/captcha v0.0.0-20200410033034-d6a58c933758
 	github.com/orivil/service v0.0.0-20200402101334-763a342c6981
 	github.com/orivil/xcfg v0.0.0-20200403080022-3c07229e82aa
+	github.com/orivil/limiter v0.0.0-20200410091217-a9075b79fc5c
 	golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59
-	golang.org/x/image v0.0.0-20200119044424-58c23975cae1
 )
+
+replace github.com/orivil/captcha => C:\Users\zp\go\src\github.com\orivil\captcha
