@@ -8,8 +8,8 @@ package main
 
 import (
 	"github.com/orivil/service"
-	"github.com/orivil/services/auth/bak"
-	"github.com/orivil/services/auth/bak/storages/gorm"
+	"github.com/orivil/services/auth/password"
+	"github.com/orivil/services/auth/password/storages/gorm"
 	email2 "github.com/orivil/services/captcha/email"
 	"github.com/orivil/services/captcha/image"
 	"github.com/orivil/services/captcha/storages/memory"
@@ -77,8 +77,8 @@ func main() {
 		emailService          *email.Service
 		emailCaptchaService   *email2.Service
 		limiterService        *limiter.Service
-		authStorageService    bak.StorageService
-		authDispatcherService *bak.Service
+		authStorageService    password.StorageService
+		authDispatcherService *password.Service
 	)
 	cfgService = cfg.NewService(cfg.NewMemoryStorageService(config))
 
@@ -100,7 +100,7 @@ func main() {
 
 	authStorageService = auth_gorm_storage.NewService(gormService)
 
-	authDispatcherService = bak.NewService(authStorageService, sessionService, imageCaptchaService, emailCaptchaService, limiterService)
+	authDispatcherService = password.NewService(authStorageService, sessionService, imageCaptchaService, emailCaptchaService, limiterService)
 
 	container := service.NewContainer()
 

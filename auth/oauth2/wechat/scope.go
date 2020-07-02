@@ -2,4 +2,11 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found at https://mit-license.org.
 
-package services
+package wechat
+
+const (
+	ScopeBase     Scope = "snsapi_base"
+	ScopeUserInfo Scope = "snsapi_userinfo"
+)
+
+type Scope string

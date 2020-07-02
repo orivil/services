@@ -5,9 +5,10 @@
 package redis
 
 import (
+	"context"
 	"fmt"
 	"github.com/alicebob/miniredis/v2"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 )
 
 /**
@@ -48,7 +49,7 @@ func (e Env) Init() (client *redis.Client, mockServer *miniredis.Miniredis, err 
 		Password: e.Password,
 		DB:       e.DB,
 	})
-	err = client.Ping().Err()
+	err = client.Ping(context.Background()).Err()
 	if err != nil {
 		return nil, nil, fmt.Errorf("ping redis: %s", err)
 	} else {

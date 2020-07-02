@@ -5,7 +5,7 @@
 package session_redis_storage
 
 import (
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/orivil/service"
 	redis2 "github.com/orivil/services/memory/redis"
 	"github.com/orivil/services/session"

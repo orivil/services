@@ -6,7 +6,7 @@ package redis
 
 import (
 	"github.com/alicebob/miniredis/v2"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/orivil/service"
 	"github.com/orivil/services/cfg"
 	"github.com/orivil/xcfg"

@@ -5,7 +5,7 @@
 package captcha_redis_storage
 
 import (
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/orivil/service"
 	"github.com/orivil/services/captcha"
 	redis2 "github.com/orivil/services/memory/redis"
