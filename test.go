@@ -41,7 +41,8 @@ func main() {
 		writer.Write([]byte(echoStr))
 	})
 	http.HandleFunc("/login", func(writer http.ResponseWriter, request *http.Request) {
-		uri := dis.RedirectURI(wechat.ScopeUserInfo, "some_state", "/signing")
+		uri := dis.RedirectURI(wechat.ScopeUserInfo, "some_state", "http://data.orivil.com/signing")
+		log.Info.Println(uri)
 		http.Redirect(writer, request, uri, 302)
 	})
 	http.HandleFunc("/signing", func(writer http.ResponseWriter, request *http.Request) {
