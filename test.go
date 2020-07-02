@@ -5,6 +5,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/orivil/log"
 	"github.com/orivil/service"
@@ -48,14 +49,19 @@ func main() {
 		query := request.URL.Query()
 		code := query.Get("code")
 		if code != "" {
-			openid, err := dis.Exchange(code)
+			token, err := dis.Exchange(code)
 			if err != nil {
 				panic(err)
 			}
-			user, err := dis.GetUserInfo(openid)
+			user, err := dis.GetUserInfo(token.Openid)
 			if err != nil {
 				panic(err)
 			}
+			data, err := json.MarshalIndent(user, "", "	")
+			if err != nil {
+				panic(err)
+			}
+			writer.Write(data)
 			fmt.Println(user)
 		}
 	})

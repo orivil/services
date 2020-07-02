@@ -36,8 +36,7 @@ func (d *Dispatcher) RedirectURI(scope Scope, state, url string) string {
 }
 
 // 使用 code 换取 access token, 并保存 access token, 返回用户 openid
-func (d *Dispatcher) Exchange(code string) (openid string, err error) {
-	var token *oauth2.AccessToken
+func (d *Dispatcher) Exchange(code string) (token *Token, err error) {
 	token, err = d.cfg.Exchange(code)
 	if err != nil {
 		return
@@ -46,29 +45,18 @@ func (d *Dispatcher) Exchange(code string) (openid string, err error) {
 	if err != nil {
 		return
 	}
-	return token.Openid, nil
+	return token, nil
 }
 
-// 获得用户信息, 需用户允许(配置项 scope = snsapi_userinfo 且用户同意), 如果 access token
-// 已过期, 则会刷新 access token, 如果 access token 超过刷新时间, 则会返回 ErrTokenExpired
-func (d *Dispatcher) GetUserInfo(openid string) (user *oauth2.User, err error) {
-	if d.store != nil {
-		user, err = d.store.GetUser(openid)
-		if err != nil {
-			return nil, err
-		}
-		if user != nil {
-			return user, nil
-		}
-	}
-	var token *oauth2.AccessToken
+// 获取 access token, 且尝试刷新 access token
+func (d *Dispatcher) GetToken(openid string) (token *Token, err error) {
 	token, err = d.store.GetToken(openid)
 	if err != nil {
 		return nil, err
 	}
 	if token != nil {
-		if now := time.Now().Unix(); token.ExpiresIn < now {
-			if token.ExpiresIn + refreshExpires < now {
+		if now := time.Now().Unix(); token.ExpiresAt < now {
+			if token.ExpiresAt + refreshExpires < now {
 				return nil, ErrTokenExpired
 			} else {
 				// 刷新 token
@@ -82,7 +70,26 @@ func (d *Dispatcher) GetUserInfo(openid string) (user *oauth2.User, err error) {
 				}
 			}
 		}
-		return d.cfg.GetUserInfo(openid, token.AccessToken)
+	} else {
+		return nil, ErrTokenExpired
 	}
-	return nil, ErrTokenExpired
+	return token, nil
+}
+
+// 获得用户信息, 需用户允许(配置项 scope = snsapi_userinfo 且用户同意), 如果 access token
+// 已过期, 则会刷新 access token, 如果 access token 超过刷新时间, 则会返回 ErrTokenExpired
+func (d *Dispatcher) GetUserInfo(openid string) (user *oauth2.User, err error) {
+	user, err = d.store.GetUser(openid)
+	if err != nil {
+		return nil, err
+	}
+	if user != nil {
+		return user, nil
+	}
+	var token *Token
+	token, err = d.GetToken(openid)
+	if err != nil {
+		return nil, err
+	}
+	return d.cfg.GetUserInfo(openid, token.AccessToken)
 }

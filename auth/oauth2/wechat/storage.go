@@ -11,8 +11,8 @@ import (
 
 type Storage interface {
 	// store token
-	SaveToken(openid string, token *oauth2.AccessToken) error
-	GetToken(openid string) (*oauth2.AccessToken, error)
+	SaveToken(openid string, token *Token) error
+	GetToken(openid string) (*Token, error)
 
 	// store user
 	SaveUser(openid string, user *oauth2.User) error

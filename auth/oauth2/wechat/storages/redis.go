@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/go-redis/redis/v8"
+	"github.com/orivil/services/auth/oauth2/wechat"
 	"github.com/orivil/wechat/oauth2"
 	"time"
 )
@@ -28,7 +29,7 @@ func NewRedis(token, user *redis.Client) *Redis {
 	}
 }
 
-func (r *Redis) SaveToken(openid string, token *oauth2.AccessToken) error {
+func (r *Redis) SaveToken(openid string, token *wechat.Token) error {
 	str, err := jsonStr(token)
 	if err != nil {
 		return err
@@ -36,7 +37,7 @@ func (r *Redis) SaveToken(openid string, token *oauth2.AccessToken) error {
 	return r.tc.Set(NilContext, openid, str, tokenDuration).Err()
 }
 
-func (r *Redis) GetToken(openid string) (*oauth2.AccessToken, error) {
+func (r *Redis) GetToken(openid string) (*wechat.Token, error) {
 	str, err := r.tc.Get(NilContext, openid).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -45,7 +46,7 @@ func (r *Redis) GetToken(openid string) (*oauth2.AccessToken, error) {
 			return nil, err
 		}
 	}
-	token := &oauth2.AccessToken{}
+	token := &wechat.Token{}
 	err = json.Unmarshal([]byte(str), token)
 	if err != nil {
 		return nil, err

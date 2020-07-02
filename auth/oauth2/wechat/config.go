@@ -4,7 +4,9 @@
 
 package wechat
 
-import "github.com/orivil/wechat/oauth2"
+import (
+	"github.com/orivil/wechat/oauth2"
+)
 
 /**
 # 公众号登录授权
@@ -29,14 +31,22 @@ func (c *Config) RedirectURL(scope, state, url string) string {
 	return oauth2.InitAppRedirect(scope, url, c.Appid, "", state)
 }
 
-func (c *Config) Exchange(code string) (*oauth2.AccessToken, error) {
-	return oauth2.GetAccessToken(c.Appid, c.Secret, code)
+func (c *Config) Exchange(code string) (*Token, error) {
+	t, err := oauth2.GetAccessToken(c.Appid, c.Secret, code)
+	if err != nil {
+		return nil, err
+	}
+	return NewToken(t), nil
 }
 
-func (c *Config) Refresh(refreshToken string) (*oauth2.AccessToken, error) {
-	return oauth2.RefreshAccessToken(c.Appid, refreshToken)
+func (c *Config) Refresh(refreshToken string) (*Token, error) {
+	t, err := oauth2.RefreshAccessToken(c.Appid, refreshToken)
+	if err != nil {
+		return nil, err
+	}
+	return NewToken(t), nil
 }
 
-func (c *Config) GetUserInfo(openid, token string) (*oauth2.User, error) {
-	return oauth2.GetUserInfo(openid, token)
+func (c *Config) GetUserInfo(openid, accessToken string) (*oauth2.User, error) {
+	return oauth2.GetUserInfo(openid, accessToken)
 }

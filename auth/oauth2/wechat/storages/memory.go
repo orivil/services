@@ -5,18 +5,19 @@
 package wechat_storages
 
 import (
+	"github.com/orivil/services/auth/oauth2/wechat"
 	"github.com/orivil/wechat/oauth2"
 )
 
 type Memory struct {
 	users map[string]*oauth2.User
-	tokens map[string]*oauth2.AccessToken
+	tokens map[string]*wechat.Token
 }
 
 func NewMemory() *Memory {
 	return &Memory{
 		users: map[string]*oauth2.User{},
-		tokens: map[string]*oauth2.AccessToken{},
+		tokens: map[string]*wechat.Token{},
 	}
 }
 
@@ -30,12 +31,12 @@ func (m *Memory) GetUser(openid string) (*oauth2.User, error) {
 	return user, nil
 }
 
-func (m *Memory) SaveToken(openid string, token *oauth2.AccessToken) error {
+func (m *Memory) SaveToken(openid string, token *wechat.Token) error {
 	m.tokens[openid] = token
 	return nil
 }
 
-func (m *Memory) GetToken(openid string) (*oauth2.AccessToken, error) {
+func (m *Memory) GetToken(openid string) (*wechat.Token, error) {
 	token := m.tokens[openid]
 	return token, nil
 }
