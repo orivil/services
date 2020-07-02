@@ -15,6 +15,7 @@ import (
 // redis 存储器测试, redis 服务器为模拟服务器, 与实际 redis 服务器可能有所区别
 // see: github.com/alicebob/miniredis/v2
 func ExampleNewService() {
+	// TOML data
 	var config = `
 # redis配置
 [redis]

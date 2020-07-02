@@ -13,6 +13,7 @@ import (
 // 内存型配置存储器主要用于测试时方做便零时配置
 func ExampleNewService() {
 
+	// TOML data
 	var configData = `
 [mysql]
 host = "127.0.0.1"

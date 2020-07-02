@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"github.com/orivil/service"
 	"github.com/orivil/services/cfg"
+	"github.com/orivil/services/database"
 	"github.com/orivil/xcfg"
 	"os"
 	"path/filepath"
@@ -42,6 +43,10 @@ func (s *Service) New(ctn *service.Container) (value interface{}, err error) {
 		return db.Close()
 	})
 	return db, nil
+}
+
+func (s *Service) Dialect() database.DBDialect {
+	return database.SQLite3
 }
 
 func (s *Service) Get(ctn *service.Container) (db *sql.DB, err error) {

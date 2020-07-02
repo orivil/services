@@ -10,14 +10,6 @@ import (
 	"sync"
 )
 
-type DBDialect string
-
-const (
-	Mysql    DBDialect = "mysql"
-	Postgres DBDialect = "postgres"
-	SQLite3  DBDialect = "sqlite3"
-)
-
 /**
 # gorm 配置
 [gorm]
@@ -28,7 +20,6 @@ dialect = "sqlite3"
 # 数据库表名前缀
 table_prefix = ""
 */
-
 type Env struct {
 	Debug       bool   `toml:"debug"`
 	Dialect     string `toml:"dialect"`

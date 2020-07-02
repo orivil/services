@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 	"path"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -15,6 +16,7 @@ const (
 )
 
 func main() {
+	oauth2.
 	dir, file := path.Split("/")
 	fmt.Println("dir", dir, "file", file)
 }

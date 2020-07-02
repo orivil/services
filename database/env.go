@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+const (
+	Mysql    DBDialect = "mysql"
+	Postgres DBDialect = "postgres"
+	SQLite3  DBDialect = "sqlite3"
+)
+
 // 数据库公共配置
 type Env struct {
 	MaxLifetime  int `toml:"max_lifetime"`
@@ -28,3 +34,5 @@ func (e Env) Init(db *sql.DB) error {
 	}
 	return db.Ping()
 }
+
+type DBDialect string

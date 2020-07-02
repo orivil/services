@@ -6,7 +6,7 @@ package auth_gorm_storage
 
 import (
 	"github.com/orivil/service"
-	"github.com/orivil/services/auth"
+	"github.com/orivil/services/auth/bak"
 	"github.com/orivil/services/database/gorm"
 )
 
@@ -20,15 +20,15 @@ func (s *Service) New(ctn *service.Container) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return auth.Storage(NewStorage(db, true)), nil
+	return bak.Storage(NewStorage(db, true)), nil
 }
 
-func (s *Service) Get(ctn *service.Container) (auth.Storage, error) {
+func (s *Service) Get(ctn *service.Container) (bak.Storage, error) {
 	store, err := ctn.Get(&s.self)
 	if err != nil {
 		return nil, err
 	} else {
-		return store.(auth.Storage), nil
+		return store.(bak.Storage), nil
 	}
 }
 
