@@ -91,7 +91,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(data)
+		fmt.Println(string(data))
 	})
 
 	http.HandleFunc("/signing", func(writer http.ResponseWriter, request *http.Request) {
