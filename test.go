@@ -13,6 +13,7 @@ import (
 	wechat_storages "github.com/orivil/services/auth/oauth2/wechat/storages"
 	"github.com/orivil/services/cfg"
 	"github.com/orivil/services/memory/redis"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -73,6 +74,26 @@ func main() {
 		uri := dis.RedirectURI(wechat.ScopeUserInfo, "some_state", "http://data.orivil.com/signing")
 		http.Redirect(writer, request, uri, 302)
 	})
+	http.HandleFunc("/refresh", func(writer http.ResponseWriter, request *http.Request) {
+		cookie, err := request.Cookie("RefreshToken")
+		if err != nil {
+			panic(err)
+		}
+		refreshToken := cookie.Value
+		uri := "https://api.weixin.qq.com/sns/oauth2/access_token?grant_type=refresh_token&refresh_token" + refreshToken
+		uri += "&appid=wx4d2b9900882b9fe6&secret=8b70dabf6cfc479b4fb497d454c95173"
+		fmt.Println(uri)
+		res, err := http.Get(uri)
+		if err != nil {
+			panic(err)
+		}
+		data, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(data)
+	})
+
 	http.HandleFunc("/signing", func(writer http.ResponseWriter, request *http.Request) {
 		query := request.URL.Query()
 		code := query.Get("code")
@@ -90,6 +111,14 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
+			http.SetCookie(writer, &http.Cookie{
+				Name: "Authorization",
+				Value: token.AccessToken,
+			})
+			http.SetCookie(writer, &http.Cookie{
+				Name: "RefreshToken",
+				Value: token.RefreshToken,
+			})
 			writer.Write(data)
 			fmt.Println(user)
 		}
