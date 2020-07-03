@@ -75,7 +75,7 @@ func main() {
 		http.Redirect(writer, request, uri, 302)
 	})
 	http.HandleFunc("/refresh", func(writer http.ResponseWriter, request *http.Request) {
-		cookie, err := request.Cookie("RefreshToken")
+		cookie, err := request.Cookie("refresh_token")
 		if err != nil {
 			panic(err)
 		}
@@ -112,11 +112,11 @@ func main() {
 				panic(err)
 			}
 			http.SetCookie(writer, &http.Cookie{
-				Name: "Authorization",
+				Name: "authorization",
 				Value: token.AccessToken,
 			})
 			http.SetCookie(writer, &http.Cookie{
-				Name: "RefreshToken",
+				Name: "refresh_token",
 				Value: token.RefreshToken,
 			})
 			writer.Write(data)
