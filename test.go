@@ -12,10 +12,12 @@ import (
 	"github.com/orivil/services/auth/oauth2/wechat"
 	wechat_storages "github.com/orivil/services/auth/oauth2/wechat/storages"
 	"github.com/orivil/services/cfg"
+	"github.com/orivil/services/memory/redis"
 	"net/http"
 )
 
-var toml = `# 公众号登录授权
+var toml =
+`# 公众号登录授权
 [oauth2-wechat]
 # 公众号 AppID
 appid = "wx4d2b9900882b9fe6"
@@ -23,15 +25,41 @@ appid = "wx4d2b9900882b9fe6"
 secret = "8b70dabf6cfc479b4fb497d454c95173"
 # 授权成功后跳转地址, 在发起授权时可以指定地址, 如果未指定才使用该值
 redirect_uri = ""
+
+# oauth2 redis user 配置
+[oauth2-redis-user]
+# 是否模拟客户端, 开启后将链接至虚拟客户端, 测试时使用
+# 使用方式参考: https://github.com/alicebob/miniredis
+is_mock = false
+# 地址
+addr = "127.0.0.1:6379"
+# 密码
+password = ""
+# 数据库
+db = 1
+
+# oauth2 redis token 配置
+[oauth2-redis-token]
+# 是否模拟客户端, 开启后将链接至虚拟客户端, 测试时使用
+# 使用方式参考: https://github.com/alicebob/miniredis
+is_mock = false
+# 地址
+addr = "127.0.0.1:6379"
+# 密码
+password = ""
+# 数据库
+db = 2
 `
 
 func main() {
 	container := service.NewContainer()
 	configService := cfg.NewService(cfg.NewMemoryStorageService(toml))
+	oauth2RedisUserService := redis.NewService("oauth2-redis-user", configService)
+	oauth2RedisTokenService := redis.NewService("oauth2-redis-token", configService)
 	wechatService := wechat.NewService(wechat.Options{
 		ConfigNamespace: "oauth2-wechat",
 		ConfigService:   configService,
-		Storage:         wechat_storages.NewMemoryService(),
+		Storage:         wechat_storages.NewRedisService(oauth2RedisUserService, oauth2RedisTokenService),
 	})
 	dis, err := wechatService.Get(container)
 	if err != nil {

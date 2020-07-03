@@ -66,7 +66,7 @@ func (r *RedisService) Get(ctn *service.Container) (wechat.Storage, error) {
 }
 
 func NewRedisService(user, token *redis.Service) *RedisService {
-	s := &RedisService{
+	s := &RedisService {
 		user:  user,
 		token: token,
 	}
