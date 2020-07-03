@@ -10,12 +10,12 @@ package session
 # jwt 签名方式(支持：HS512/HS384/HS256)
 signing_method = "HS512"
 # jwt 签名key
-signing_key = "GINADMIN"
+signing_key = "secret key"
 # session 过期时间（单位秒）
-expired = 7200
+expires = 7200
 */
 type Env struct {
 	SigningMethod string `toml:"signing_method"`
 	SigningKey    string `toml:"signing_key"`
-	Expired       int64  `toml:"expired"`
+	Expires       int64  `toml:"expires"`
 }

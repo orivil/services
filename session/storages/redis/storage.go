@@ -5,6 +5,7 @@
 package session_redis_storage
 
 import (
+	"context"
 	"github.com/go-redis/redis/v8"
 	"time"
 )
@@ -18,7 +19,7 @@ func NewStorage(client *redis.Client) *Storage {
 }
 
 func (s *Storage) IsOK(session string) (ok bool, err error) {
-	res, er := s.client.Exists(session).Result()
+	res, er := s.client.Exists(context.Background(), session).Result()
 	if er != nil {
 		return false, er
 	}
@@ -26,9 +27,9 @@ func (s *Storage) IsOK(session string) (ok bool, err error) {
 }
 
 func (s *Storage) SaveSession(session string, expires time.Duration) error {
-	return s.client.Set(session, 1, expires).Err()
+	return s.client.Set(context.Background(), session, 1, expires).Err()
 }
 
 func (s *Storage) DelSession(session string) error {
-	return s.client.Del(session).Err()
+	return s.client.Del(context.Background(), session).Err()
 }

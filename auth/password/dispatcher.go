@@ -18,7 +18,7 @@ var (
 	ErrUserNotRegistered     = errors.New("user not registered")
 	ErrUserAlreadyRegistered = errors.New("user already registered")
 	ErrPasswordIncorrect     = errors.New("password incorrect")
-	ErrInvalidToken          = errors.New("invalid token")
+	ErrInvalidToken          = session.ErrInvalidToken
 )
 
 type Dispatcher struct {
@@ -112,11 +112,7 @@ func (h *Dispatcher) DelToken(token string) error {
 
 // 解析 token 并获得 token 过期时间, 如果返回值 err 为 ErrInvalidToken, 则需要重新验证并生成 token
 func (h *Dispatcher) UnmarshalToken(token string) (user string, expiredAt int64, err error) {
-	user, expiredAt, err = h.SessionDispatcher.UnmarshalToken(token)
-	if session.IsInvalidTokenErr(err) {
-		err = ErrInvalidToken
-	}
-	return
+	return h.SessionDispatcher.UnmarshalToken(token)
 }
 
 func (h *Dispatcher) generateAndSavePassword(id int, password string) error {

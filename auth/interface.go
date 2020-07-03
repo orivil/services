@@ -5,4 +5,5 @@ package auth
 
 type Interface interface {
 	IsOnline(token string) (ok bool, err error)
+	Unmarshal(token string) (id string, err error)
 }

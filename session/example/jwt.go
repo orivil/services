@@ -136,7 +136,7 @@ func testExpired(dispatcher *session.Dispatcher) {
 		// 将时间向前推进 6 秒
 		setForwardTime(6*time.Second, func() {
 			_, _, err = dispatcher.UnmarshalToken(token)
-			if !session.IsInvalidTokenErr(err) {
+			if session.ErrInvalidToken != err {
 				panic("need invalid error")
 			}
 		})
